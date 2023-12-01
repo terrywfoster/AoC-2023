@@ -21,13 +21,13 @@ public class Day01Test {
         final Day01 part1Test = new Day01(testInput);
         final Day01 part1Puzzle = new Day01(puzzleInput);
 
-        //Assertions.assertThat(part1Test.totalTopCalories(1)).isEqualTo(24000);
-        //Assertions.assertThat(part1Puzzle.totalTopCalories(1)).isEqualTo(70698);
+        Assertions.assertThat(part1Test.totalDigitCalibrations()).isEqualTo(142);
+        Assertions.assertThat(part1Puzzle.totalDigitCalibrations()).isEqualTo(54450);
     }
     @Test
     public void part2() throws IOException, URISyntaxException {
         final var testInput = Files.readAllLines(Paths.get(
-                Objects.requireNonNull(getClass().getClassLoader().getResource("Day01/TestInput.txt"))
+                Objects.requireNonNull(getClass().getClassLoader().getResource("Day01/TestPart2Input.txt"))
                         .toURI()));
         final var puzzleInput = Files.readAllLines(Paths.get(
                 Objects.requireNonNull(getClass().getClassLoader().getResource("Day01/PuzzleInput.txt"))
@@ -36,7 +36,7 @@ public class Day01Test {
         final Day01 part2Test = new Day01(testInput);
         final Day01 part2Puzzle = new Day01(puzzleInput);
 
-        //Assertions.assertThat(part2Test.totalTopCalories(3)).isEqualTo(45000);
-        //Assertions.assertThat(part2Puzzle.totalTopCalories(3)).isEqualTo(206643);
+        Assertions.assertThat(part2Test.totalCalibrations()).isEqualTo(281);
+        Assertions.assertThat(part2Puzzle.totalCalibrations()).isEqualTo(54265);
     }
 }
