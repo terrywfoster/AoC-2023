@@ -1,79 +1,93 @@
 package foster.terry.aoc2023;
 
-import org.apache.commons.lang3.tuple.ImmutableTriple;
-import org.apache.commons.lang3.tuple.MutableTriple;
-
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class Day02 {
 
-    private final List<List<ImmutableTriple<Integer, Integer, Integer>>> games = new ArrayList<>();
+    private final List<Game> games = new ArrayList<>();
 
 
     public Day02 (final List<String> input) {
         for (String game : input) {
             game = game.substring(game.indexOf(":") + 2);
 
-            List<ImmutableTriple<Integer, Integer, Integer>> gameSets = new ArrayList<>();
+            Game thisGame = new Game();
 
-            List<String> sets = Arrays.stream(game.split("; ")).toList();
+            String[] sets = game.split("; ");
             for(final String set : sets) {
-                List<String> colors = Arrays.stream(set.split(", ")).toList();
+                String[] colors = set.split("[, ]+");
 
-                MutableTriple<Integer, Integer, Integer> setValues = new MutableTriple<>(0,0,0);
-
-                for(final String color : colors) {
-                    List<String> pair = Arrays.stream(color.split(" ")).toList();
-
-                    int count = Integer.parseInt(pair.get(0));
-                    switch (pair.get(1)) {
-                        case "red":
-                            setValues.left = count;
-                            break;
-                        case "green":
-                            setValues.middle = count;
-                            break;
-                        case "blue":
-                            setValues.right = count;
-                            break;
+                int red = 0, green = 0, blue = 0;
+                for(int x = 0; x < colors.length; x = x + 2) {
+                    int count = Integer.parseInt(colors[x]);
+                    switch (colors[x+1]) {
+                        case "red" -> red = count;
+                        case "green" -> green = count;
+                        case "blue" -> blue = count;
                     }
+                    thisGame.sets.add(new Set(red, green, blue));
                 }
-                gameSets.add(new ImmutableTriple<>(setValues.left, setValues.middle, setValues.right));
             }
-            games.add(gameSets);
+            games.add(thisGame);
         }
     }
 
-    public int totalImpossibleGames(int maxRed, int maxGreen, int maxBlue) {
+    public int totalPossibleScore(int maxRed, int maxGreen, int maxBlue) {
         int totalScore = 0;
         for (int x = 0; x < games.size(); x++) {
-            boolean possible = true;
-            List<ImmutableTriple<Integer, Integer, Integer>> game = games.get(x);
-            for (ImmutableTriple<Integer, Integer, Integer> set : game) {
-                if (set.left > maxRed || set.middle > maxGreen || set.right > maxBlue) {
-                    possible = false;
-                    break;
-                }
+            Set maxColors = findMaxColors(games.get(x));
+            if (maxColors.red <= maxRed && maxColors.green <= maxGreen && maxColors.blue <= maxBlue) {
+                totalScore += x + 1;
             }
-            if (possible) { totalScore += x + 1; }
         }
         return totalScore;
     }
 
     public int power() {
         int totalPower = 0;
-        for (List<ImmutableTriple<Integer, Integer, Integer>> game : games) {
-            int maxRed = 0, maxGreen = 0, maxBlue = 0;
-            for (ImmutableTriple<Integer, Integer, Integer> set : game) {
-                maxRed = Math.max(maxRed, set.left);
-                maxGreen = Math.max(maxGreen, set.middle);
-                maxBlue = Math.max(maxBlue, set.right);
-            }
-            totalPower += maxRed * maxGreen * maxBlue;
+        for (Game game : games) {
+            Set maxColors = findMaxColors(game);
+            totalPower += maxColors.red * maxColors.green * maxColors.blue;
         }
 
         return totalPower;
+    }
+
+    private Set findMaxColors(Game game) {
+        var setMaxRed = game.sets.stream().max(Comparator.comparing(Set::getRed)).orElseThrow(NoSuchElementException::new);
+        var setMaxGreen = game.sets.stream().max(Comparator.comparing(Set::getGreen)).orElseThrow(NoSuchElementException::new);
+        var setMaxBlue = game.sets.stream().max(Comparator.comparing(Set::getBlue)).orElseThrow(NoSuchElementException::new);
+        return new Set(setMaxRed.red, setMaxGreen.green, setMaxBlue.blue);
+    }
+
+    private static class Set {
+        public int red;
+        public int green;
+        public int blue;
+        public Set(int red, int green, int blue) {
+            this.red = red;
+            this.green = green;
+            this.blue = blue;
+        }
+        public int getRed() {
+            return this.red;
+        }
+        public int getGreen() {
+            return this.green;
+        }
+        public int getBlue() {
+            return this.blue;
+        }
+    }
+
+    private static class Game {
+        public List<Set> sets;
+
+        public Game() {
+            this.sets = new ArrayList<>();
+        }
     }
 }

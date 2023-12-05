@@ -21,8 +21,8 @@ public class Day02Test {
         final Day02 part1Test = new Day02(testInput);
         final Day02 part1Puzzle = new Day02(puzzleInput);
 
-        Assertions.assertThat(part1Test.totalImpossibleGames(12, 13, 14)).isEqualTo(8);
-        Assertions.assertThat(part1Puzzle.totalImpossibleGames(12, 13, 14)).isEqualTo(2285);
+        Assertions.assertThat(part1Test.totalPossibleScore(12, 13, 14)).isEqualTo(8);
+        Assertions.assertThat(part1Puzzle.totalPossibleScore(12, 13, 14)).isEqualTo(2285);
     }
     @Test
     public void part2() throws IOException, URISyntaxException {
