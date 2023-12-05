@@ -7,18 +7,27 @@ import java.util.regex.Pattern;
 public class Day01 {
     private final List<String> calibrations = new ArrayList<>();
 
-    private final HashMap<String, String> spelledNumbers = new HashMap<>();
+    private final HashMap<String, Integer> numbers = new HashMap<>();
     public Day01(final List<String> input)
     {
-        spelledNumbers.put("1", "one");
-        spelledNumbers.put("2", "two");
-        spelledNumbers.put("3", "three");
-        spelledNumbers.put("4", "four");
-        spelledNumbers.put("5", "five");
-        spelledNumbers.put("6", "six");
-        spelledNumbers.put("7", "seven");
-        spelledNumbers.put("8", "eight");
-        spelledNumbers.put("9", "nine");
+        numbers.put("one", 1);
+        numbers.put("two", 2);
+        numbers.put("three", 3);
+        numbers.put("four", 4);
+        numbers.put("five", 5);
+        numbers.put("six", 6);
+        numbers.put("seven", 7);
+        numbers.put("eight", 8);
+        numbers.put("nine", 9);
+        numbers.put("1",1);
+        numbers.put("2",2);
+        numbers.put("3",3);
+        numbers.put("4",4);
+        numbers.put("5",5);
+        numbers.put("6",6);
+        numbers.put("7",7);
+        numbers.put("8",8);
+        numbers.put("9",9);
 
         calibrations.addAll(input);
     }
@@ -35,38 +44,28 @@ public class Day01 {
         for (String line : calibrations) {
             //Get first digit
             int fSpellNumberIndex = 1000;
-            String firstNumber = "";
-            for (Map.Entry<String, String> entry : spelledNumbers.entrySet()) {
-                int fIndex = line.indexOf(entry.getValue());
+            int firstNumber = 0;
+            for (Map.Entry<String, Integer> entry : numbers.entrySet()) {
+                int fIndex = line.indexOf(entry.getKey());
                 if (fIndex > -1 && fIndex < fSpellNumberIndex) {
-                    firstNumber = entry.getKey();
+                    firstNumber = entry.getValue();
                     fSpellNumberIndex = fIndex;
                 }
-            }
-            int fDigitIndex = line.indexOf(findFirstDigit(line));
-            fDigitIndex = fDigitIndex < 0 ? 1000 : fDigitIndex;
-            if (fDigitIndex < fSpellNumberIndex) {
-                firstNumber = findFirstDigit(line);
             }
 
             //Get last digit
             int lSpellNumberIndex = 0;
-            String lastNumber = "";
-            for (Map.Entry<String, String> entry : spelledNumbers.entrySet()) {
-                int lIndex = line.lastIndexOf(entry.getValue());
+            int lastNumber = 0;
+            for (Map.Entry<String, Integer> entry : numbers.entrySet()) {
+                int lIndex = line.lastIndexOf(entry.getKey());
                 if (lIndex > lSpellNumberIndex) {
-                    lastNumber = entry.getKey();
+                    lastNumber = entry.getValue();
                     lSpellNumberIndex = lIndex;
                 }
             }
-            int lDigitIndex = line.lastIndexOf(findLastDigit(line));
-            lDigitIndex = lDigitIndex >= line.length() ? 0 : lDigitIndex;
-            if (lDigitIndex > lSpellNumberIndex || Objects.equals(lastNumber, "")) {
-                lastNumber = findLastDigit(line);
-            }
 
             //Add number to list
-            digits.add(Integer.parseInt(firstNumber + lastNumber));
+            digits.add(firstNumber * 10 + lastNumber);
         }
         return digits.stream().mapToInt(v -> v).sum();
     }
