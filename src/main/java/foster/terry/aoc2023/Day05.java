@@ -26,12 +26,8 @@ public class Day05 {
         for (var x = 0; x < seedIdArray.length; x += 2) {
             ranges.add(new ImmutablePair<>(seedIdArray[x],seedIdArray[x+1]));
         }
-        System.out.println("INITIAL");
-        ranges.forEach(x -> System.out.println(x.getLeft() + "," + x.getRight()));
         for (final List<Triple<Long, Long, Long>> map : maps) {
             ranges = nextRanges(map, ranges);
-            System.out.println("ITERATION");
-            ranges.forEach(x -> System.out.println(x.getLeft() + "," + x.getRight()));
 
         }
 
