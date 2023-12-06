@@ -12,7 +12,6 @@ public class Day05 {
     final private List<Seed> seeds = new ArrayList<>();
 
     final private List<List<Triple<Long, Long, Long>>> maps = new ArrayList<>();
-    final private List<List<Triple<Long, Long, Long>>> mapsPlain = new ArrayList<>();
 
     final long[] seedIdArray;
 
@@ -23,22 +22,16 @@ public class Day05 {
     }
 
     public long lowestLocationRange() {
-        long lowest = Long.MAX_VALUE;
-        for (int x = 0; x < seedIdArray.length; x = x+2) {
-            for(long z = seedIdArray[x]; z < seedIdArray[x] + seedIdArray[x+1]; z++) {
-                lowest = Math.min(lowest, (new Seed(z)).location);
-            }
-        }
-        return lowest;
-    }
-
-    public long lowestLocationRangeNew() {
         List<ImmutablePair<Long, Long>> ranges = new ArrayList<>();
         for (var x = 0; x < seedIdArray.length; x += 2) {
             ranges.add(new ImmutablePair<>(seedIdArray[x],seedIdArray[x+1]));
         }
-        for (final List<Triple<Long, Long, Long>> map : mapsPlain) {
+        System.out.println("INITIAL");
+        ranges.forEach(x -> System.out.println(x.getLeft() + "," + x.getRight()));
+        for (final List<Triple<Long, Long, Long>> map : maps) {
             ranges = nextRanges(map, ranges);
+            System.out.println("ITERATION");
+            ranges.forEach(x -> System.out.println(x.getLeft() + "," + x.getRight()));
 
         }
 
@@ -126,19 +119,14 @@ public class Day05 {
 
     private Triple<Long, Long, Long> addToMap(final String line) {
         final long[] mapArray = Arrays.stream(line.trim().split(" +")).mapToLong(Long::parseLong).toArray();
-        return new ImmutableTriple<>(mapArray[1], mapArray[1] + mapArray[2], mapArray[0] - mapArray[1]);
-
-    }
-    private Triple<Long, Long, Long> addToMapPlain(final String line) {
-        final long[] mapArray = Arrays.stream(line.trim().split(" +")).mapToLong(Long::parseLong).toArray();
         return new ImmutableTriple<>(mapArray[0], mapArray[1], mapArray[2]);
 
     }
 
     private long calcValFromMap(final long val, final List<Triple<Long, Long, Long>> map) {
         for (final Triple<Long, Long, Long> range : map) {
-            if (range.getLeft() <= val && val < range.getMiddle()) {
-                return val + range.getRight();
+            if (range.getMiddle() <= val && val <= range.getMiddle() + range.getRight() - 1) {
+                return val + (range.getLeft() - range.getMiddle());
             }
         }
         return val;
@@ -150,20 +138,15 @@ public class Day05 {
                 if (line.contains("map")) {
                     mapNum++;
                     maps.add(new ArrayList<>());
-                    mapsPlain.add(new ArrayList<>());
                 }
                 else if (!line.isEmpty()) {
                     maps.get(mapNum).add(addToMap(line));
-                    mapsPlain.get(mapNum).add(addToMapPlain(line));
 
                 }
             }
         }
         for (final var map : maps) {
-            map.sort((Comparator.comparingLong(Triple::getLeft)));
-        }
-        for (final var map : mapsPlain) {
-            map.sort((Comparator.comparingLong(Triple::getLeft)));
+            map.sort((Comparator.comparingLong(Triple::getMiddle)));
         }
     }
 }

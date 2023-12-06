@@ -36,7 +36,7 @@ public class Day05Test {
         final Day05 part2Test = new Day05(testInput);
         final Day05 part2Puzzle = new Day05(puzzleInput);
 
-        Assertions.assertThat(part2Test.lowestLocationRangeNew()).isEqualTo(46);
-        Assertions.assertThat(part2Puzzle.lowestLocationRangeNew()).isEqualTo(4917124);
+        Assertions.assertThat(part2Test.lowestLocationRange()).isEqualTo(46);
+        Assertions.assertThat(part2Puzzle.lowestLocationRange()).isEqualTo(4917124);
     }
 }
