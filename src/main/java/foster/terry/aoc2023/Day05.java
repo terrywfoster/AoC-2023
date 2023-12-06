@@ -1,45 +1,99 @@
 package foster.terry.aoc2023;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.*;
 
 public class Day05 {
     final private List<String> input;
     final private List<Seed> seeds = new ArrayList<>();
-    final private List<ImmutableTriple<Long, Long, Long>> seed2SoilMap = new ArrayList<>();
-    final private List<ImmutableTriple<Long, Long, Long>> soil2FertMap = new ArrayList<>();
-    final private List<ImmutableTriple<Long, Long, Long>> fert2WaterMap = new ArrayList<>();
-    final private List<ImmutableTriple<Long, Long, Long>> water2LightMap = new ArrayList<>();
-    final private List<ImmutableTriple<Long, Long, Long>> light2TempMap = new ArrayList<>();
-    final private List<ImmutableTriple<Long, Long, Long>> temp2HumMap = new ArrayList<>();
-    final private List<ImmutableTriple<Long, Long, Long>> hum2LocMap = new ArrayList<>();
+
+    final private List<List<Triple<Long, Long, Long>>> maps = new ArrayList<>();
+    final private List<List<Triple<Long, Long, Long>>> mapsPlain = new ArrayList<>();
+
+    final long[] seedIdArray;
 
     public Day05(List<String> puzzleInput) {
         input = puzzleInput;
         populateMaps();
+        seedIdArray = Arrays.stream(input.get(0).substring(input.get(0).indexOf(":") + 2).trim().split(" +")).mapToLong(Long::parseLong).toArray();
     }
 
     public long lowestLocationRange() {
         long lowest = Long.MAX_VALUE;
-        long[] seedRangeArray = Arrays.stream(input.get(0).substring(input.get(0).indexOf(":") + 2).trim().split(" +")).mapToLong(Long::parseLong).toArray();
-        for (int x = 0; x < seedRangeArray.length; x = x+2) {
-            for(long z = seedRangeArray[x]; z < seedRangeArray[x] + seedRangeArray[x+1]; z++) {
+        for (int x = 0; x < seedIdArray.length; x = x+2) {
+            for(long z = seedIdArray[x]; z < seedIdArray[x] + seedIdArray[x+1]; z++) {
                 lowest = Math.min(lowest, (new Seed(z)).location);
             }
         }
         return lowest;
     }
 
+    public long lowestLocationRangeNew() {
+        List<ImmutablePair<Long, Long>> ranges = new ArrayList<>();
+        for (var x = 0; x < seedIdArray.length; x += 2) {
+            ranges.add(new ImmutablePair<>(seedIdArray[x],seedIdArray[x+1]));
+        }
+        for (final List<Triple<Long, Long, Long>> map : mapsPlain) {
+            ranges = nextRanges(map, ranges);
+
+        }
+
+        return ranges.stream().mapToLong(Pair::getLeft).min().orElse(Long.MAX_VALUE);
+
+    }
+
+    private List<ImmutablePair<Long, Long>> nextRanges(final List<Triple<Long, Long, Long>> map, final List<ImmutablePair<Long, Long>> ranges) {
+        final List<ImmutablePair<Long, Long>> nextRanges = new ArrayList<>();
+
+        for (final ImmutablePair<Long, Long> range : ranges) {
+            long lower = range.getLeft();
+            long count = range.getRight();
+            for (final Triple<Long, Long, Long> section : map) {
+                final long lowerBound = section.getMiddle();
+                final long upperBound = section.getMiddle() + section.getRight() - 1;
+                while (count > 0 && lower <= upperBound) {
+                    if (lower < lowerBound) {
+                        if ((lower + count - 1) < lowerBound) {
+                            nextRanges.add(new ImmutablePair<>(lower, count));
+                            count = 0;
+                        } else {
+                            long tempCount = lowerBound - lower;
+                            nextRanges.add(new ImmutablePair<>(lower, tempCount));
+                            lower = lowerBound;
+                            count -= tempCount;
+                        }
+                    } else {
+                        if ((lower + count -1) <= upperBound) {
+                            nextRanges.add(new ImmutablePair<>((lower - section.getMiddle()) + section.getLeft(), count));
+                            count = 0;
+                        } else {
+                            long tempCount = upperBound + 1 - lower;
+                            nextRanges.add(new ImmutablePair<>((lower - section.getMiddle()) + section.getLeft(), tempCount));
+                            lower = upperBound + 1;
+                            count -= tempCount;
+                        }
+                    }
+                }
+            }
+            if (count > 0) {
+                nextRanges.add(new ImmutablePair<>(lower, count));
+            }
+
+        }
+        return nextRanges;
+
+    }
+
     public long lowestLocationDiscrete() {
-        long[] seedArray = Arrays.stream(input.get(0).substring(input.get(0).indexOf(":") + 2).trim().split(" +")).mapToLong(Long::parseLong).toArray();
-        for (long id : seedArray) {
+        for (long id : seedIdArray) {
             seeds.add(new Seed(id));
         }
-        Seed lowestLocation = seeds.stream()
-                .min(Comparator.comparing(Seed::getLocation))
-                .orElseThrow(NoSuchElementException::new);
-        return lowestLocation.location;
+        seeds.sort((Comparator.comparingLong(Seed::getLocation)));
+        return seeds.get(0).getLocation();
     }
 
 
@@ -51,103 +105,65 @@ public class Day05 {
         public long id;
         public long location;
 
-        public void setLocation() {
-            this.location = calcValFromMap(this.getHumidity(), hum2LocMap);
-        }
-        public long getLocation() {
-            return calcValFromMap(this.getHumidity(), hum2LocMap);
-        }
-        public long getHumidity() {
-            return calcValFromMap(this.getTemperature(), temp2HumMap);
-        }
+        public long getLocation() { return this.location; }
+        public void setLocation() { this.location = calcValFromMap(this.getHumidity(), maps.get(6)); }
+        public long getHumidity() { return calcValFromMap(this.getTemperature(), maps.get(5)); }
         public long getTemperature() {
-            return calcValFromMap(this.getLight(), light2TempMap);
+            return calcValFromMap(this.getLight(), maps.get(4));
         }
         public long getLight() {
-            return calcValFromMap(this.getWater(), water2LightMap);
+            return calcValFromMap(this.getWater(), maps.get(3));
         }
         public long getWater() {
-            return calcValFromMap(this.getFertilizer(), fert2WaterMap);
+            return calcValFromMap(this.getFertilizer(), maps.get(2));
         }
-        public long getFertilizer() {
-            return calcValFromMap(this.getSoil(), soil2FertMap);
-        }
-        public long getSoil() {
-            return calcValFromMap(this.getSeed(), seed2SoilMap);
-        }
+        public long getFertilizer() { return calcValFromMap(this.getSoil(), maps.get(1)); }
+        public long getSoil() { return calcValFromMap(this.getSeed(), maps.get(0)); }
         public long getSeed() {
             return this.id;
         }
     }
 
-    private void addToMap(String line, List<ImmutableTriple<Long, Long, Long>> map) {
-        long[] mapArray = Arrays.stream(line.substring(line.indexOf(":") + 1).trim().split(" +")).mapToLong(Long::parseLong).toArray();
-        map.add(new ImmutableTriple<>(mapArray[1], mapArray[1] + mapArray[2], mapArray[0] - mapArray[1]));
+    private Triple<Long, Long, Long> addToMap(final String line) {
+        final long[] mapArray = Arrays.stream(line.trim().split(" +")).mapToLong(Long::parseLong).toArray();
+        return new ImmutableTriple<>(mapArray[1], mapArray[1] + mapArray[2], mapArray[0] - mapArray[1]);
 
     }
-    private long calcValFromMap(long val, List<ImmutableTriple<Long, Long, Long>> map) {
-        long retVal = val;
-        for (ImmutableTriple<Long, Long, Long> range : map) {
-            if (range.left <= val && val < range.middle) {
-                retVal += range.right;
+    private Triple<Long, Long, Long> addToMapPlain(final String line) {
+        final long[] mapArray = Arrays.stream(line.trim().split(" +")).mapToLong(Long::parseLong).toArray();
+        return new ImmutableTriple<>(mapArray[0], mapArray[1], mapArray[2]);
+
+    }
+
+    private long calcValFromMap(final long val, final List<Triple<Long, Long, Long>> map) {
+        for (final Triple<Long, Long, Long> range : map) {
+            if (range.getLeft() <= val && val < range.getMiddle()) {
+                return val + range.getRight();
             }
         }
-        return retVal;
+        return val;
     }
     private void populateMaps() {
-        Iterator<String> iterator = input.iterator();
-        while (iterator.hasNext()) {
-            String line = iterator.next();
-            if (line.contains("seed-to-soil")) {
-                line = iterator.next();
-                while (!line.isBlank()) {
-                    addToMap(line, seed2SoilMap);
-                    line = iterator.next();
+        int mapNum = -1;
+        for (final String line : input) {
+            if (!line.contains("seeds")) {
+                if (line.contains("map")) {
+                    mapNum++;
+                    maps.add(new ArrayList<>());
+                    mapsPlain.add(new ArrayList<>());
                 }
-            }
-            else if (line.contains("soil-to-fertilizer")) {
-                line = iterator.next();
-                while (!line.isBlank()) {
-                    addToMap(line, soil2FertMap);
-                    line = iterator.next();
-                }
-            }
-            else if (line.contains("fertilizer-to-water")) {
-                line = iterator.next();
-                while (!line.isBlank()) {
-                    addToMap(line, fert2WaterMap);
-                    line = iterator.next();
-                }
-            }
-            else if (line.contains("water-to-light")) {
-                line = iterator.next();
-                while (!line.isBlank()) {
-                    addToMap(line, water2LightMap);
-                    line = iterator.next();
-                }
-            }
-            else if (line.contains("light-to-temperature")) {
-                line = iterator.next();
-                while (!line.isBlank()) {
-                    addToMap(line, light2TempMap);
-                    line = iterator.next();
-                }
-            }
-            else if (line.contains("temperature-to-humidity")) {
-                line = iterator.next();
-                while (!line.isBlank()) {
-                    addToMap(line, temp2HumMap);
-                    line = iterator.next();
-                }
-            }
-            else if (line.contains("humidity-to-location")) {
-                line = iterator.next();
-                while (iterator.hasNext() && !line.isBlank()) {
-                    addToMap(line, hum2LocMap);
-                    line = iterator.next();
+                else if (!line.isEmpty()) {
+                    maps.get(mapNum).add(addToMap(line));
+                    mapsPlain.get(mapNum).add(addToMapPlain(line));
+
                 }
             }
         }
-
+        for (final var map : maps) {
+            map.sort((Comparator.comparingLong(Triple::getLeft)));
+        }
+        for (final var map : mapsPlain) {
+            map.sort((Comparator.comparingLong(Triple::getLeft)));
+        }
     }
 }
