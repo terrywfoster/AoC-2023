@@ -28,34 +28,24 @@ public class Day04 {
     public int scratchCardTotalPoints() {
         int totalPoints = 0;
         for (Set<Integer> game : gameMatches) {
-            int cardPoints = 0;
             if (!game.isEmpty()) {
-                cardPoints = 1;
-                for (int x = 1; x < game.size(); x++) {
-                    cardPoints *= 2;
-                }
+                totalPoints += (int) Math.pow(2, game.size()-1);
             }
-
-            totalPoints += cardPoints;
         }
-
-
         return totalPoints;
     }
 
     public int totalScratchCards() {
         final int[] cardCounts = new int[gameMatches.size()];
         for(int x = 0; x < gameMatches.size(); x++) {
+            cardCounts[x]++;
+            int currentCardCount = cardCounts[x];
             int wonCards = gameMatches.get(x).size();
-            int currentCardCount = cardCounts[x] + 1;
-            for (int c = 0; c < currentCardCount; c++) {
-                for (int w = 0; w < wonCards; w++) {
-                    cardCounts[x+1+w]++;
-                }
+            for (int c = 1; c <= wonCards; c++) {
+                cardCounts[x+c] += currentCardCount;
             }
 
         }
-
-        return IntStream.of(cardCounts).sum() + gameMatches.size();
+        return IntStream.of(cardCounts).sum();
     }
 }
