@@ -18,8 +18,8 @@ public class Day06Test {
                 Objects.requireNonNull(getClass().getClassLoader().getResource("Day06/PuzzleInput.txt"))
                         .toURI()));
 
-        final Day06 part1Test = new Day06(testInput, false);
-        final Day06 part1Puzzle = new Day06(puzzleInput, false);
+        final Day06 part1Test = new Day06(testInput);
+        final Day06 part1Puzzle = new Day06(puzzleInput);
 
         Assertions.assertThat(part1Test.productOfWaysToWin()).isEqualTo(288);
         Assertions.assertThat(part1Puzzle.productOfWaysToWin()).isEqualTo(32076);
@@ -33,10 +33,10 @@ public class Day06Test {
                 Objects.requireNonNull(getClass().getClassLoader().getResource("Day06/PuzzleInput.txt"))
                         .toURI()));
 
-        final Day06 part2Test = new Day06(testInput, true);
-        final Day06 part2Puzzle = new Day06(puzzleInput, true);
+        final Day06 part2Test = new Day06(testInput);
+        final Day06 part2Puzzle = new Day06(puzzleInput);
 
-        Assertions.assertThat(part2Test.productOfWaysToWin()).isEqualTo(71503);
-        Assertions.assertThat(part2Puzzle.productOfWaysToWin()).isEqualTo(34278221);
+        Assertions.assertThat(part2Test.oneRaceWaysToWin()).isEqualTo(71503);
+        Assertions.assertThat(part2Puzzle.oneRaceWaysToWin()).isEqualTo(34278221);
     }
 }
