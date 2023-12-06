@@ -28,7 +28,7 @@ public class Day02 {
                         case "green" -> green = count;
                         case "blue" -> blue = count;
                     }
-                    thisGame.sets.add(new Set(red, green, blue));
+                    thisGame.turns.add(new Turn(red, green, blue));
                 }
             }
             games.add(thisGame);
@@ -38,7 +38,7 @@ public class Day02 {
     public int totalPossibleScore(int maxRed, int maxGreen, int maxBlue) {
         int totalScore = 0;
         for (int x = 0; x < games.size(); x++) {
-            Set maxColors = findMaxColors(games.get(x));
+            Turn maxColors = findMaxColors(games.get(x));
             if (maxColors.red <= maxRed && maxColors.green <= maxGreen && maxColors.blue <= maxBlue) {
                 totalScore += x + 1;
             }
@@ -49,25 +49,25 @@ public class Day02 {
     public int power() {
         int totalPower = 0;
         for (Game game : games) {
-            Set maxColors = findMaxColors(game);
+            Turn maxColors = findMaxColors(game);
             totalPower += maxColors.red * maxColors.green * maxColors.blue;
         }
 
         return totalPower;
     }
 
-    private Set findMaxColors(Game game) {
-        var setMaxRed = game.sets.stream().max(Comparator.comparing(Set::getRed)).orElseThrow(NoSuchElementException::new);
-        var setMaxGreen = game.sets.stream().max(Comparator.comparing(Set::getGreen)).orElseThrow(NoSuchElementException::new);
-        var setMaxBlue = game.sets.stream().max(Comparator.comparing(Set::getBlue)).orElseThrow(NoSuchElementException::new);
-        return new Set(setMaxRed.red, setMaxGreen.green, setMaxBlue.blue);
+    private Turn findMaxColors(Game game) {
+        var setMaxRed = game.turns.stream().max(Comparator.comparing(Turn::getRed)).orElseThrow(NoSuchElementException::new);
+        var setMaxGreen = game.turns.stream().max(Comparator.comparing(Turn::getGreen)).orElseThrow(NoSuchElementException::new);
+        var setMaxBlue = game.turns.stream().max(Comparator.comparing(Turn::getBlue)).orElseThrow(NoSuchElementException::new);
+        return new Turn(setMaxRed.red, setMaxGreen.green, setMaxBlue.blue);
     }
 
-    private static class Set {
+    private static class Turn {
         public int red;
         public int green;
         public int blue;
-        public Set(int red, int green, int blue) {
+        public Turn(int red, int green, int blue) {
             this.red = red;
             this.green = green;
             this.blue = blue;
@@ -84,10 +84,10 @@ public class Day02 {
     }
 
     private static class Game {
-        public List<Set> sets;
+        public List<Turn> turns;
 
         public Game() {
-            this.sets = new ArrayList<>();
+            this.turns = new ArrayList<>();
         }
     }
 }
