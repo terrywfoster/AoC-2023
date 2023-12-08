@@ -13,13 +13,10 @@ public class Day08 {
         moves = input.get(0).toCharArray();
         for (final String line : input) {
             if (line.contains("=")) {
-                maps.put(line.substring(0,3), Pair.of(line.substring(7, 10), line.substring(12, 15)));
+                String[] keys = line.split(" = \\(|, |\\)");
+                maps.put(keys[0], Pair.of(keys[1], keys[2]));
             }
         }
-    }
-
-    public long howManyMoves() {
-        return getMovesToEnd("AAA", 1);
     }
 
     public long ghostMoves() {
@@ -30,28 +27,27 @@ public class Day08 {
 
         long lcmMoves = 0;
         for(final Map.Entry<String, Pair<String, String>> map : startMaps.entrySet()) {
-            if (lcmMoves == 0) { lcmMoves = getMovesToEnd(map.getKey(), 2); }
-            lcmMoves = lcm(lcmMoves, getMovesToEnd(map.getKey(), 2));
+            if (lcmMoves == 0) { lcmMoves = getMovesToEnd(map.getKey(), ".+Z$"); }
+            lcmMoves = lcm(lcmMoves, getMovesToEnd(map.getKey(), ".+Z$"));
         }
         return lcmMoves;
     }
 
-    private long getMovesToEnd(String startKey, int part) {
-        long moveCount = 1L;
-        String key = maps.get(startKey).getLeft();
-        if (moves[0] == 'R') { key = maps.get(startKey).getRight(); }
-        for (int x = 1; x < moves.length; x++) {
+    public long getMovesToEnd(String startKey, String endKey) {
+        long moveCount = 0;
+        String key = startKey;
+        int moveIndex = 0;
+        while (true) {
             moveCount++;
 
-            switch (moves[x]) {
+            switch (moves[moveIndex]) {
                 case 'L' -> key = maps.get(key).getLeft();
                 case 'R' -> key = maps.get(key).getRight();
             }
-            if (key.equals("ZZZ") && part == 1) { break; } //FOUND ZZZ
-            if (key.charAt(2) == 'Z' && part == 2) { break; } //FOUND Z
-            if (x == moves.length-1) { x = -1; } //RESET
+            if (key.matches(endKey)) { return moveCount; } //FOUND END
+            moveIndex++;
+            if (moveIndex == moves.length) { moveIndex = 0; } //RESET
         }
-        return moveCount;
     }
 
     private static long gcd(long x, long y) {
