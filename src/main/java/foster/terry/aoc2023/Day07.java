@@ -1,19 +1,14 @@
 package foster.terry.aoc2023;
 
-
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Day07 {
-    List<Hand> hands = new ArrayList<>();
-    Map<Character, Integer> cardScores = new HashMap<>();
+    private List<Hand> hands = new ArrayList<>();
+    final public static Map<Character, Integer> cardScores = new HashMap<>();
 
-    List<String> input;
-
-    public Day07 (List<String> puzzleInput) {
-        input = puzzleInput;
+    public Day07 (List<String> input) {
         cardScores.put('2',2);
         cardScores.put('3',3);
         cardScores.put('4',4);
@@ -27,18 +22,17 @@ public class Day07 {
         cardScores.put('Q',12);
         cardScores.put('K',13);
         cardScores.put('A',14);
-    }
 
-    public long totalWinnings() {
         for (String line : input) {
             String[] play = line.split(" ");
             Hand hand = new Hand(play[0], Integer.parseInt(play[1]));
-            Pair<Hand, HashMap<Integer, Integer>> result = getHandScores(hand);
-            hand = result.getLeft();
-            HashMap<Integer, Integer> map = result.getRight();
-            map = sortSets(map);
-            hand.handType = getHandType((int)map.values().toArray()[0], map.values().size() == 1 ? 0 : (int)map.values().toArray()[1]);
             hands.add(hand);
+        }
+    }
+
+    public long totalWinnings() {
+        for (Hand hand : hands) {
+            hand.handType = getHandType((int)hand.cardFrequency.values().toArray()[0], hand.cardFrequency.values().size() == 1 ? 0 : (int)hand.cardFrequency.values().toArray()[1]);
         }
         //Sort hands
         sortHands();
@@ -50,42 +44,15 @@ public class Day07 {
     public long totalWinningsJoker() {
         cardScores.replace('J',1);
 
-        for (String line : input) {
-            String[] play = line.split(" ");
-            Hand hand = new Hand(play[0], Integer.parseInt(play[1]));
-            Pair<Hand, HashMap<Integer, Integer>> result = getHandScores(hand);
-            hand = result.getLeft();
-            HashMap<Integer, Integer> map = result.getRight();
-
-            int jokerCount = map.getOrDefault(1, 0);
-            map = sortSets(map);
-            map = filterJokers(map);
-            hand.handType = getHandType((map.values().isEmpty() ? 0 : (int)map.values().toArray()[0]) + jokerCount, map.values().size() <= 1 ? 0 : (int)map.values().toArray()[1]);
-            hands.add(hand);
+        for (Hand hand : hands) {
+            hand.setHandScore(); //Update the Hand Score now that Jokers are worth less
+            long jokerCount = hand.cardFrequency.getOrDefault(11, 0);
+            hand.cardFrequency.remove(11);
+            hand.handType = getHandType((hand.cardFrequency.values().isEmpty() ? 0 : (int)hand.cardFrequency.values().toArray()[0]) + (int)jokerCount, hand.cardFrequency.values().size() <= 1 ? 0 : (int)hand.cardFrequency.values().toArray()[1]);
         }
         sortHands();
 
         return getTotalWinnings();
-    }
-
-    private Pair<Hand, HashMap<Integer, Integer>> getHandScores(Hand hand) {
-        char[] cards = hand.cards.toCharArray();
-        HashMap<Integer, Integer> map = new HashMap<>();
-        StringBuilder handScore = new StringBuilder();
-        for(char card : cards) {
-            String score = "00" + cardScores.get(card);
-            handScore.append(score.substring(Math.max(score.length() - 2, 0)));
-
-            if (map.containsKey(cardScores.get(card))) {
-                map.put(cardScores.get(card), map.get(cardScores.get(card)) + 1);
-            }
-            else {
-                map.put(cardScores.get(card), 1);
-            }
-        }
-        hand.handScore = handScore.toString();
-
-        return Pair.of(hand, map);
     }
 
     private long getTotalWinnings() {
@@ -96,19 +63,6 @@ public class Day07 {
 
         return totalWinnings;
     }
-    private HashMap<Integer, Integer> sortSets(HashMap<Integer, Integer> map) {
-        return map.entrySet().stream().sorted(Map.Entry.<Integer, Integer>comparingByValue().reversed().thenComparing(Map.Entry.<Integer, Integer>comparingByKey().reversed())).collect(Collectors.toMap(
-                Map.Entry::getKey,
-                Map.Entry::getValue,
-                (oldValue, newValue) -> oldValue, LinkedHashMap::new));
-    }
-    private HashMap<Integer, Integer> filterJokers(HashMap<Integer, Integer> map) {
-        return map.entrySet().stream().filter(x -> x.getKey() != 1).collect(Collectors.toMap(
-                Map.Entry::getKey,
-                Map.Entry::getValue,
-                (oldValue, newValue) -> oldValue, LinkedHashMap::new));
-    }
-
     private int getHandType(int highestSet, int nextHighestSet) {
         switch (highestSet) {
             case 5: return 1;
@@ -133,7 +87,8 @@ public class Day07 {
     }
 
     private void sortHands() {
-        hands = hands.stream().sorted(Comparator.comparing(Hand::getHandType).reversed().thenComparing(Hand::getHandScore)).toList();
+        hands = hands.stream().sorted(Comparator.comparing(Hand::getHandType).reversed()
+                .thenComparing(Hand::getHandScore)).toList();
     }
 
     private static class Hand {
@@ -142,18 +97,29 @@ public class Day07 {
         public int handType;
         public String handScore;
 
+        public Map<Integer, Integer> cardFrequency;
+
         public Hand(String cards, int bid) {
             this.cards = cards;
             this.bid = bid;
+            this.cardFrequency = cards.chars().mapToObj(c -> cardScores.get((char) c))
+                    .collect(Collectors.groupingBy(Function.identity(), Collectors.collectingAndThen(Collectors.counting(), Long::intValue )))
+                    .entrySet().stream().sorted(Map.Entry.<Integer, Integer>comparingByValue().reversed())
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            Map.Entry::getValue,
+                            (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+            this.setHandScore();
         }
 
-        public int getHandType() {
-            return this.handType;
+        public void setHandScore() {
+            this.handScore = this.cards.chars()
+                    .mapToObj(x -> ("00" + cardScores.get((char)x)).substring(("00" + cardScores.get((char)x)).length()-2))
+                    .collect(Collectors.joining());
         }
-        public String getHandScore() {
-            return this.handScore;
 
-        }
+        public int getHandType() { return this.handType; }
+        public String getHandScore() { return this.handScore; }
     }
 
 }
